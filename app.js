@@ -2,6 +2,7 @@ const express = require("express");
 const morgan = require("morgan");
 const compression = require("compression")
 const xss = require("xss-clean")
+const hpp = require("hpp")
 const mongoSanitize = require("express-mongo-sanitize")
 
 const app = express();
