@@ -3,7 +3,8 @@ const morgan = require("morgan");
 const compression = require("compression")
 //const xss = require("xss-clean")
 const hpp = require("hpp")
-const cors = require("corsfg")
+const helmet = require("helmet")
+const cors = require("cors")
 const mongoSanitize = require("express-mongo-sanitize")
 
 const app = express();
@@ -19,7 +20,23 @@ const projectRoutes = require("./routers/projectRouters");
 //app.use(morgan("dev"))
 
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
+app.use(
+  helmet({
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: {
+      allowOrigins: ['*'],
+    },
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ['*']
+        ,
+        'img-src': ["'self'", 's3.amazonaws.com', 'res.cloudinary.com'],
+        scriptSrc: ["* data: 'unsafe-eval' 'unsafe-inline' blob:"],
+      },
+    },
+  }),
+);
 
 app.use(cors())
 app.options('*', cors())
