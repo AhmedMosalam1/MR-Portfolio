@@ -33,6 +33,7 @@ exports.resizePhotoProject = catchAsync(async (req, res, next) => {
         crop: 'fill',
     });
 
+   
 
     req.body.projectImage = result1.url
 
@@ -121,7 +122,7 @@ exports.getAllProject = catchAsync(async (req, res, next) => {
     }else if (req.query.slug) {
         obj = { slug:req.query.slug}
     }
-    console.log(req.query.tech);
+   
 
     const result = await Project.find(obj)
 
