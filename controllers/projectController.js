@@ -145,7 +145,6 @@ exports.deleteOne = catchAsync(async (req, res, next) => {
     })
 })
 
-
 exports.getOne = catchAsync(async (req, res, next) => {
     const id = req.params.id
 
@@ -174,7 +173,7 @@ exports.getAllProject = catchAsync(async (req, res, next) => {
     }
 
 
-    const result = await Project.find(obj)
+    const result = await Project.find(obj).sort({createdAt:-1})
 
     if (!result) {
         return next(new ApiError('no projects yet', 404));
