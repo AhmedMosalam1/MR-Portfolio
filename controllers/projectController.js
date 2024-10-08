@@ -167,9 +167,7 @@ exports.getAllProject = catchAsync(async (req, res, next) => {
     if (req.query.status) {
         obj = { status: req.query.status }
     } else if (req.query.tech) {
-        obj = { tech: { $regex: req.query.tech, $options: 'i' } }
-    } else if (req.query.slug) {
-        obj = { slug: req.query.slug }
+        obj = { tech: req.query.tech }
     }
 
 
