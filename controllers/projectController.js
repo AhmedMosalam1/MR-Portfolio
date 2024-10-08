@@ -17,56 +17,106 @@ exports.uploadPhoto = upload.fields([
 ])
 
 exports.resizePhotoProject = catchAsync(async (req, res, next) => {
-
-    if (!req.files.projectImage && !req.files.techImage) return next()
-
+    //console.log("object");
+    if (!req.files.projectImage && !req.files.techImage ) return next()
+    //console.log("object");
     req.body.imageCover = `${req.files.projectImage[0].originalname}`
 
 
-    await sharp(req.files.projectImage[0].buffer)
-        .toFormat('jpeg')
-        .jpeg({ quality: 90 })
-        .toFile(`upload/project/${req.body.imageCover}`)
+    // await sharp(req.files.projectImage[0].buffer)
+    //     .toFormat('jpeg')
+    //     .jpeg({ quality: 90 })
+    //     .toFile(`upload/project/${req.body.imageCover}`)
 
-    const result1 = await cloudinary.uploader.upload(`upload/project/${req.body.imageCover}`, {
-        public_id: `${Date.now()}_Cover`,
-        crop: 'fill',
-    });
+    // const result1 = await cloudinary.uploader.upload(`upload/project/${req.body.imageCover}`, {
+    //     public_id: `${Date.now()}_Cover`,
+    //     crop: 'fill',
+    // });
 
-   
+    // req.body.projectImage = result1.url
 
-    req.body.projectImage = result1.url
-
+    const result = await uploadToCloudinary(req.files.projectImage[0].buffer, req.files.projectImage[0].originalname,`upload/project/${req.body.imageCover}`);
+    req.body.projectImage = result.url
+    
+    // console.log(req.body);
     req.body.techImage = []
-    // req.body.techImage.push("http://res.cloudinary.com/dghznhvma/image/upload/v1706971112/1706971111405-Tech.jpg")
-    // req.body.techImage.push("http://res.cloudinary.com/dghznhvma/image/upload/v1706971112/1706971111392-Tech.jpg")
-    // req.body.techImage.push("https://res.cloudinary.com/dghznhvma/image/upload/v1706973540/1706973539377-Tech.jpg")
-    //req.body.techImage.push("https://res.cloudinary.com/dghznhvma/image/upload/v1706972651/1706972649769-Tech.jpg")
-    //req.body.techImage.push("https://res.cloudinary.com/dghznhvma/image/upload/v1706972497/1706972496128-Tech.jpg")
-    //req.body.techImage.push("https://res.cloudinary.com/dghznhvma/image/upload/v1706976446/1706976444956-Tech.jpg")
+    if(req.body.html){
+        req.body.techImage.push("http://res.cloudinary.com/dghznhvma/image/upload/v1707425597/1707425596761-Tech.png")
+    }
+    if(req.body.css){
+        req.body.techImage.push("http://res.cloudinary.com/dghznhvma/image/upload/v1707425597/1707425596775-Tech.png")
 
-    await Promise.all(
-        req.files.techImage.map(async (file, i) => {
+    }
+    if(req.body.js){
+        req.body.techImage.push("http://res.cloudinary.com/dghznhvma/image/upload/v1707425597/1707425596794-Tech.png")
 
-            const filename = `${file.originalname}`
+    }
+    if(req.body.bootstrap){
+        req.body.techImage.push("http://res.cloudinary.com/dghznhvma/image/upload/v1707425597/1707425596783-Tech.png")
 
-            await sharp(file.buffer)
-                .toFormat('jpeg')
-                .jpeg({ quality: 90 })
-                .toFile(`upload/techImage/${filename}`)
+    }
+    if(req.body.tailwind){
+        req.body.techImage.push("http://res.cloudinary.com/dghznhvma/image/upload/v1707425597/1707425596788-Tech.png")
 
-            const result = await cloudinary.uploader.upload(`upload/techImage/${filename}`, {
-                public_id: `${Date.now()}-Tech`,
-                crop: 'fill',
-            });
+    }
+    if(req.body.react){
+        req.body.techImage.push("http://res.cloudinary.com/dghznhvma/image/upload/v1707425597/1707425596790-Tech.png")
+    }
+    // Check if req.body.techImage is an array or req.files
+    // if (Array.isArray(req.body.techImage)) {
+    //     console.log('techImage is an array')
+    // } else if (typeof req.files.techImage === 'object') {
+    //     console.log('techImage is req.files')
+    // }
+    // await Promise.all(
+    //     req.body.techImage.map(async (file, i) => {
 
-            req.body.techImage.push(result.url)
+    //         const filename = `${file.originalname}`
 
-        })
-    )
+    //         await sharp(file.buffer)
+    //           //  .resize(64, 64) // Set the dimensions for the icon
+    //           .jpeg({ quality: 90, chromaSubsampling: '4:4:4' }) // Save as PNG with a transparent background
+    //            // .toBuffer(); // Get the image data as a buffer
+    //             .toFile(`upload/techImage/${filename}`)
+
+    //         const result = await cloudinary.uploader.upload(`upload/techImage/${filename}`, {
+    //             public_id: `${Date.now()}-Tech`,
+    //             crop: 'fill',
+    //         });
+    //             //console.log("object");
+    //             //console.log(file);
+    //          req.body.techImage.push()
+
+    //     })
+    //  )
+
+    if (req.files.techImage) {
+        const techImagePromises = req.files.techImage.map(async (file) => {
+            const result = await uploadToCloudinary(file.buffer, file.originalname, `upload/techImage/${file.originalname}`);
+            req.body.techImage.push(result.url);
+        });
+
+        await Promise.all(techImagePromises);
+    }
 
     next()
 })
+
+const uploadToCloudinary = (buffer, filename, folderPath, options = {}) => {
+    return new Promise((resolve, reject) => {
+        options.folder = folderPath;
+        options.public_id = filename;
+
+        const uploadStream = cloudinary.uploader.upload_stream(options, (error, result) => {
+            if (error) {
+                reject(error);
+            } else {
+                resolve(result);
+            }
+        });
+        uploadStream.end(buffer);
+    });
+};
 
 exports.createOne = catchAsync(async (req, res, next) => {
     const doc = await Project.create(req.body)
@@ -87,7 +137,7 @@ exports.deleteOne = catchAsync(async (req, res, next) => {
         return next(new ApiError(`Can't find Project on this id`, 404));
     }
 
-    await doc.remove()
+    await doc.deleteOne()
 
 
     res.status(201).json({
@@ -118,11 +168,11 @@ exports.getAllProject = catchAsync(async (req, res, next) => {
     if (req.query.status) {
         obj = { status: req.query.status }
     } else if (req.query.tech) {
-        obj = { tech:{ $regex: req.query.tech, $options: 'i' }}
-    }else if (req.query.slug) {
-        obj = { slug:req.query.slug}
+        obj = { tech: { $regex: req.query.tech, $options: 'i' } }
+    } else if (req.query.slug) {
+        obj = { slug: req.query.slug }
     }
-   
+
 
     const result = await Project.find(obj)
 
@@ -140,7 +190,7 @@ exports.getAllProject = catchAsync(async (req, res, next) => {
 
 })
 
-exports.updateOne=catchAsync(async (req, res, next) => {
+exports.updateOne = catchAsync(async (req, res, next) => {
     const result = await Project.findByIdAndUpdate(req.params.id, req.body, {
         new: true,
         runValidators: true
